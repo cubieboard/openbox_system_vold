@@ -45,10 +45,17 @@ public:
     static const char *ASECDIR;
 
     static const char *LOOPDIR;
+    static const int MAX_PARTITIONS = 16;           /* modified by javen */
+    static const int MAX_UNMOUNT_PARTITIONS = 256;  /* modified by javen */
 
 protected:
     char *mLabel;
     char *mMountpoint;
+
+    char *mMountPart[MAX_PARTITIONS];           //挂载点
+    char *mUnMountPart[MAX_UNMOUNT_PARTITIONS]; //为删除成功的挂载点
+    int mSharelun[MAX_PARTITIONS];
+
     VolumeManager *mVm;
     bool mDebug;
     int mPartIdx;
@@ -67,6 +74,8 @@ public:
     int mountVol();
     int unmountVol(bool force, bool revert);
     int formatVol();
+    int shareVol(int lun);
+    int unshareVol();
 
     const char *getLabel() { return mLabel; }
     const char *getMountpoint() { return mMountpoint; }
@@ -91,6 +100,7 @@ protected:
     virtual int getFlags(void) = 0;
 
     int createDeviceNode(const char *path, int major, int minor);
+    int deleteDeviceNode(const char *path);
 
 private:
     int initializeMbr(const char *deviceNode);
@@ -99,6 +109,13 @@ private:
     int doUnmount(const char *path, bool force);
     int doMoveMount(const char *src, const char *dst, bool force);
     void protectFromAutorunStupidity();
+
+    char* createMountPoint(const char *path, int major, int minor);
+    int deleteMountPoint(char* mountpoint);
+    void saveUnmountPoint(char* mountpoint);
+    void deleteUnMountPoint(int clear);
+
+    int mMountedPartNum; /* the partition numbers that had mounted */
 };
 
 typedef android::List<Volume *> VolumeCollection;

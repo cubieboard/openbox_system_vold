@@ -57,12 +57,11 @@ int Fat::check(const char *fsPath) {
     do {
         const char *args[5];
         args[0] = FSCK_MSDOS_PATH;
-        args[1] = "-p";
-        args[2] = "-f";
-        args[3] = fsPath;
-        args[4] = NULL;
+		args[1] = "-p";
+		args[2] = fsPath;
+		args[3] = NULL;
 
-        rc = logwrap(4, args, 1);
+        rc = logwrap(3, args, 1);
 
         switch(rc) {
         case 0:
@@ -151,11 +150,16 @@ int Fat::doMount(const char *fsPath, const char *mountPoint,
     return rc;
 }
 
-int Fat::format(const char *fsPath, unsigned int numSectors) {
-    int fd;
-    const char *args[11];
-    int rc;
+int Fat::format(const char *fsPath, unsigned int numSectors){
+	return Fat::format(fsPath, numSectors, NULL);
+}
 
+
+int Fat::format(const char *fsPath, unsigned int numSectors, const char *lable) {
+    int fd;
+    const char *args[13];
+    int rc;
+    SLOGI("Fat::format:path=%s",fsPath);
     args[0] = MKDOSFS_PATH;
     args[1] = "-F";
     args[2] = "32";
@@ -169,14 +173,31 @@ int Fat::format(const char *fsPath, unsigned int numSectors) {
         snprintf(tmp, sizeof(tmp), "%u", numSectors);
         const char *size = tmp;
         args[7] = "-s";
-        args[8] = size;
-        args[9] = fsPath;
-        args[10] = NULL;
-        rc = logwrap(11, args, 1);
-    } else {
-        args[7] = fsPath;
-        args[8] = NULL;
-        rc = logwrap(9, args, 1);
+        args[8] = size;        
+		if( lable ){
+			args[9] = "-L" ;
+			args[10] = lable;
+			args[11] = fsPath;				
+			args[12] = NULL;		
+			rc = logwrap(13, args, 1);
+		}else{
+			args[9] = fsPath;	
+			args[10] = NULL;			
+			rc = logwrap(11, args, 1);	
+		}   		
+        
+    } else {        
+		if( lable ) {
+			args[7] = "-L" ;
+			args[8] = lable;
+			args[9] = fsPath;
+			args[10] = NULL;			
+			rc = logwrap(11, args, 1);
+		}else{
+			args[7] = fsPath;
+			args[8] = NULL;			
+			rc = logwrap(9, args, 1);	
+		} 	       
     }
 
     if (rc == 0) {
